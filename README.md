@@ -6,5 +6,5 @@ This can be useful when working with amounts of data too big for regular JSON Vi
 To install this tool just run
 
 ```bash
-pip install git+
+pip install git+https://github.com/Sxmple-DavidSchmidt/JsonExplorer.git#egg=json_explorer
 ```

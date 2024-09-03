@@ -184,6 +184,3 @@ def main(argv=None):
         dtm = DataManager(json_dict)
 
     DataRenderer(dtm)
-
-if __name__ == '__main__':
-    main()
