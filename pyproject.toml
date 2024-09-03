@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "json_explorer"
+version = "0.0.1"
+authors = [
+    {name = "David Schmidt", email = "davidschmidtp@gmail.com"},
+]
+description = "TUI JSON explorer"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+json_explorer = "json_explorer.json_explorer:main"
