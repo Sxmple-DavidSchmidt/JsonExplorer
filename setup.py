@@ -5,7 +5,7 @@ setup(
     version='0.0.1',
     entry_points={
         'console_scripts': [
-            'json_explorer=json_explorer:main'
+            'json_explorer=json_explorer.json_explorer:main'
         ]
     }
 )
