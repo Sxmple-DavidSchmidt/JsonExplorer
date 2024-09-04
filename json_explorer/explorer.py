@@ -40,7 +40,7 @@ class DataValue:
 
 class DataManager:
     data: Dict
-    path: List
+    path: List[Tuple[Any, int]]
     pointer: int
 
     def __init__(self, data: Dict, path: List = None, pointer: int = 0):
@@ -48,35 +48,45 @@ class DataManager:
         self.path = path if path is not None else []
         self.pointer = pointer
 
-    def get_data(self) -> dict[DataValue, DataValue]:
-        cdata =  self._resolve_path(self.data, self.path)
+    def get_data(self) -> list[tuple[DataValue, DataValue]]:
+        def sort_dv_item(item: Tuple[DataValue, DataValue]):
+            dv_key, dv_value = item
+            if isinstance(dv_value.content, dict):
+                return 2
+            if isinstance(dv_value.content, list):
+                return 1
+            return 0
 
+        cdata =  self._resolve_path(self.data, self.path)
         if isinstance(cdata, Dict):
-            return {DataValue(key): DataValue(value) for key, value in cdata.items()}
+            cdata = {DataValue(key): DataValue(value) for key, value in cdata.items()}
+            cdata_items = sorted(sorted(cdata.items(), key=lambda item: item[0].as_string), key=sort_dv_item)
+            return cdata_items
         if isinstance(cdata, List):
-            return {DataValue(index): DataValue(value) for index, value in enumerate(cdata)}
-        return {DataValue(DataConstants.LEAF_NODE): DataValue(cdata)}
+            return [(DataValue(index), DataValue(value)) for index, value in enumerate(cdata)]
+        return [(DataValue(DataConstants.LEAF_NODE), DataValue(cdata))]
 
     def get_keys(self) -> List[DataValue]:
-        return list(self.get_data().keys())
+        return [item[0] for item in self.get_data()]
 
     def get_path(self) -> List[DataValue]:
-        return [DataValue(entry) for entry in self.path]
+        return [DataValue(entry[0]) for entry in self.path]
 
     def get_pointer(self) -> int:
         return self.pointer
 
     def move_up(self):
         if len(self.path) > 0:
+            self.pointer = self.path[-1][1] if len(self.path) > 0 else 0
             self.path = self.path[:-1]
-            self.pointer = 0
+
 
     def move_down(self):
-        key, value = list(self.get_data().items())[self.pointer]
+        key, value = list(self.get_data())[self.pointer]
         if key.content == DataConstants.LEAF_NODE:
             return
         if isinstance(value.content, (dict, list)):
-            self.path.append(key.content)
+            self.path.append((key.content, self.pointer))
             self.pointer = 0
 
     def increment_pointer(self):
@@ -88,7 +98,7 @@ class DataManager:
     @staticmethod
     def _resolve_path(data: Dict, path: List) -> Dict:
         cdata = data
-        for entry in path:
+        for entry in [p[0] for p in path]:
             if isinstance(cdata, list):
                 if isinstance(entry, int) and entry < len(cdata):
                     cdata = cdata[entry]
@@ -149,16 +159,8 @@ class DataRenderer:
         self.window.addstr(0, 0, path_str)
 
         # sort items:
-        def sort_dv_item(item: Tuple[DataValue, DataValue]):
-            dv_key, dv_value = item
-            if isinstance(dv_value.content, dict):
-                return 2
-            if isinstance(dv_value.content, list):
-                return 1
-            return 0
 
-        data_items = sorted(sorted(self.dtm.get_data().items(), key=lambda item: item[0].as_string), key=sort_dv_item)
-
+        data_items = self.dtm.get_data()
         if len(data_items) == 0:
             self.window.addstr(1, key_offset, "Entry is empty")
         else:
