@@ -3,7 +3,7 @@
 import argparse
 import json
 import sys
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from enum import Enum
 
 import curses
@@ -148,7 +148,17 @@ class DataRenderer:
         self.window.clear()
         self.window.addstr(0, 0, path_str)
 
-        data_items = self.dtm.get_data().items()
+        # sort items:
+        def sort_dv_item(item: Tuple[DataValue, DataValue]):
+            dv_key, dv_value = item
+            if isinstance(dv_value.content, dict):
+                return 2
+            if isinstance(dv_value.content, list):
+                return 1
+            return 0
+
+        data_items = sorted(sorted(self.dtm.get_data().items(), key=lambda item: item[0].as_string), key=sort_dv_item)
+
         if len(data_items) == 0:
             self.window.addstr(1, key_offset, "Entry is empty")
         else:
@@ -175,12 +185,15 @@ class DataRenderer:
 def main():
     parser = argparse.ArgumentParser(
         description='Python script to navigate big JSON objects in a TUI')
-    parser.add_argument('file_name', type=str, help='Path of the json file')
+    parser.add_argument('file_path', type=str, help='Path of the json file')
     args = parser.parse_args()
 
-    with open(args.file_name, 'r') as file:
-        json_string = file.read()
-        json_dict = json.loads(json_string)
-        dtm = DataManager(json_dict)
-
-    DataRenderer(dtm)
+    if args.file_path:
+        try:
+            with open(args.file_path, 'r') as file:
+                json_string = file.read()
+                json_dict = json.loads(json_string)
+                DataRenderer(DataManager(json_dict))
+        except FileNotFoundError:
+            print(f"Could not find file {args.file_path}")
+            exit(1)
