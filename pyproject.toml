@@ -1,13 +1,20 @@
+[tool.poetry]
+name = "json-explorer"
+version = "0.1.0"
+description = "TUI to explore JSON objects"
+license = "MIT"
+authors = ["David Schmidt <davidschmidtp@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/Sxmple-DavidSchmidt/JsonExplorer"
+keywords = ["json"]
+packages = [{include = "json_explorer"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.scripts]
+json-explorer = "json_explorer.explorer:main"
+
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "json_explorer"
-description = "TUI JSON explorer"
-version = "0.0.1"
-readme = {file = "README.txt", content-type = "text/markdown"}
-authors = [{name = "David Schmidt", email = "davidschmidtp@gmail.com"}]
-
-[project.scripts]
-json-explorer = "json_explorer.json_explorer:main"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

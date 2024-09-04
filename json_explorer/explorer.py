@@ -172,11 +172,11 @@ class DataRenderer:
             self.update_screen()
 
 
-def main(argv=None):
+def main():
     parser = argparse.ArgumentParser(
         description='Python script to navigate big JSON objects in a TUI')
     parser.add_argument('file_name', type=str, help='Path of the json file')
-    args = parser.parse_args(argv if argv is None else sys.argv)
+    args = parser.parse_args()
 
     with open(args.file_name, 'r') as file:
         json_string = file.read()
