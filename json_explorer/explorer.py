@@ -164,12 +164,12 @@ class DataRenderer:
 
     def main_loop(self):
         while True:
+            self.update_screen()
             keystroke = self.window.getch()
             if keystroke == ord('q'):
                 break
 
             self.handle_keystroke(keystroke)
-            self.update_screen()
 
 
 def main():

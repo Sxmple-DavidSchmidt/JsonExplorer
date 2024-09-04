@@ -6,5 +6,13 @@ This can be useful when working with amounts of data too big for regular JSON Vi
 To install this tool just run
 
 ```bash
-pip install git+https://github.com/Sxmple-DavidSchmidt/JsonExplorer.git#egg=json_explorer
+pipx install git+https://github.com/Sxmple-DavidSchmidt/JsonExplorer.git
 ```
+
+With `json-explorer` installed you can run
+
+```bash
+json-explorer /path/to/file.json
+```
+
+Which should open a TUI you can use to navigate the JSON file.
