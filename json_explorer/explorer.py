@@ -1,6 +1,10 @@
 #!/usr/bin/env python
+"""
+Module to navigate JSON files in a TUI
+"""
 
 import argparse
+from dataclasses import dataclass
 import json
 import sys
 from typing import List, Dict, Any, Tuple
@@ -10,10 +14,19 @@ import curses
 import _curses
 
 class DataConstants(Enum):
+    """
+    Constants for default values
+    """
+
     LEAF_NODE = -1
 
 
+@dataclass
 class DataValue:
+    """
+    Class to simplify working with different types of data
+    """
+
     content: Any
     content_type: type
     as_string: str
@@ -25,6 +38,11 @@ class DataValue:
 
     @staticmethod
     def stringify_value(value):
+        """
+        Turns different types of data into easily readable / identifiable string
+        :param value: original value
+        :return: stringified value
+        """
         if isinstance(value, str):
             return f'"{value}"'
         if isinstance(value, dict):
@@ -39,6 +57,10 @@ class DataValue:
 
 
 class DataManager:
+    """
+    Class to manage the data with its path and the pointer
+    """
+
     data: Dict
     path: List[Tuple[Any, int]]
     pointer: int
@@ -49,8 +71,13 @@ class DataManager:
         self.pointer = pointer
 
     def get_data(self) -> list[tuple[DataValue, DataValue]]:
+        """
+        Returns current data packed as instances of tuples like this: (key, value)
+        with both key and value packed as instances of DataValue.
+        :return: List of tuples of DataValues
+        """
         def sort_dv_item(item: Tuple[DataValue, DataValue]):
-            dv_key, dv_value = item
+            dv_value = item[1]
             if isinstance(dv_value.content, dict):
                 return 2
             if isinstance(dv_value.content, list):
@@ -60,28 +87,52 @@ class DataManager:
         cdata =  self._resolve_path(self.data, self.path)
         if isinstance(cdata, Dict):
             cdata = {DataValue(key): DataValue(value) for key, value in cdata.items()}
-            cdata_items = sorted(sorted(cdata.items(), key=lambda item: item[0].as_string), key=sort_dv_item)
+            cdata_items = sorted(
+                sorted(cdata.items(), key=lambda item: item[0].as_string),
+                key=sort_dv_item
+            )
             return cdata_items
         if isinstance(cdata, List):
             return [(DataValue(index), DataValue(value)) for index, value in enumerate(cdata)]
         return [(DataValue(DataConstants.LEAF_NODE), DataValue(cdata))]
 
     def get_keys(self) -> List[DataValue]:
+        """
+        Returns the current key options packed as instances of DataValue
+        :return: current key options packed as instances of DataValue
+        """
         return [item[0] for item in self.get_data()]
 
     def get_path(self) -> List[DataValue]:
+        """
+        Returns the current path packed as instances of DataValue
+        :return: current path packed as instances of DataValue
+        """
         return [DataValue(entry[0]) for entry in self.path]
 
     def get_pointer(self) -> int:
+        """
+        Returns the current integer value of the pointer
+        :return: current pointer value
+        """
         return self.pointer
 
     def move_up(self):
+        """
+        Moves up a 'directory' within the data
+        :return:
+        """
         if len(self.path) > 0:
             self.pointer = self.path[-1][1] if len(self.path) > 0 else 0
             self.path = self.path[:-1]
 
 
-    def move_down(self):
+    def move_down(self) -> None:
+        """
+        Moves into the current value selected with pointer
+        :return: None
+        """
+
         key, value = list(self.get_data())[self.pointer]
         if key.content == DataConstants.LEAF_NODE:
             return
@@ -89,14 +140,31 @@ class DataManager:
             self.path.append((key.content, self.pointer))
             self.pointer = 0
 
-    def increment_pointer(self):
+    def increment_pointer(self) -> None:
+        """
+        Decrements the pointer apllying % the length of key options
+        :return: None
+        """
         self.pointer = (self.pointer + 1) % len(self.get_keys())
 
-    def decrement_pointer(self):
+    def decrement_pointer(self) -> None:
+        """
+        Decrements the pointer apllying % the length of key options
+        :return: None
+        """
+
         self.pointer = (self.pointer - 1) % len(self.get_keys())
 
     @staticmethod
     def _resolve_path(data: Dict, path: List) -> Dict:
+        """
+        Navigates through a dictionary applying the entries of path as keys
+        _resovle_path(data, ['1', '2']) = data['1']['2']
+        :param data: Dictionary to navigate through
+        :param path: Path to navigate the dictionary with
+        :return: Value at destination
+        """
+
         cdata = data
         for entry in [p[0] for p in path]:
             if isinstance(cdata, list):
@@ -115,6 +183,10 @@ class DataManager:
 
 
 class DataRenderer:
+    """
+    Class responsible for rendering TUI depending on DataManager instance
+    """
+
     window: _curses.window
     dtm: DataManager
 
@@ -126,19 +198,32 @@ class DataRenderer:
         finally:
             self.kill_curses()
 
-    def init_curses(self):
+    def init_curses(self) -> None:
+        """
+        Applies necessary changes to terminal settings
+        :return: None
+        """
         self.window = curses.initscr()
         self.window.keypad(True)
         curses.noecho()
         curses.cbreak()
 
-    def kill_curses(self):
+    def kill_curses(self) -> None:
+        """
+        Reverts changed terminal settings
+        :return: None
+        """
         self.window.keypad(False)
         curses.nocbreak()
         curses.echo()
         curses.endwin()
 
-    def handle_keystroke(self, key: int):
+    def handle_keystroke(self, key: int) -> None:
+        """
+        Handles the response to keystrokes
+        :param key: Integer representation of the pressed key
+        :return:
+        """
         if key == curses.KEY_UP:
             self.dtm.decrement_pointer()
         elif key == curses.KEY_DOWN:
@@ -148,7 +233,12 @@ class DataRenderer:
         elif key == curses.KEY_RIGHT:
             self.dtm.move_down()
 
-    def update_screen(self):
+    def update_screen(self) -> None:
+        """
+        Renders the current state of the DataManager
+        :return: None
+        """
+
         path_str = '/'.join(['root'] + [entry.as_string for entry in self.dtm.get_path()])
         keys = self.dtm.get_keys()
 
@@ -174,7 +264,11 @@ class DataRenderer:
         self.window.addstr(self.dtm.get_pointer() + 1, 0, '>')
         self.window.refresh()
 
-    def main_loop(self):
+    def main_loop(self) -> None:
+        """
+        Main loop of the TUI.
+        :return: None
+        """
         while True:
             self.update_screen()
             keystroke = self.window.getch()
@@ -184,7 +278,12 @@ class DataRenderer:
             self.handle_keystroke(keystroke)
 
 
-def main():
+def main() -> None:
+    """
+    Method to start the program with.
+    :return: None
+    """
+
     parser = argparse.ArgumentParser(
         description='Python script to navigate big JSON objects in a TUI')
     parser.add_argument('file_path', type=str, help='Path of the json file')
@@ -198,4 +297,4 @@ def main():
                 DataRenderer(DataManager(json_dict))
         except FileNotFoundError:
             print(f"Could not find file {args.file_path}")
-            exit(1)
+            sys.exit(1)
