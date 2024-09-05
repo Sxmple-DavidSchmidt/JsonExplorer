@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "json-explorer"
-version = "0.1.0"
+version = "1.0.0"
 description = "TUI to explore JSON objects"
 license = "MIT"
 authors = ["David Schmidt <davidschmidtp@gmail.com>"]
