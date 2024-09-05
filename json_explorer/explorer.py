@@ -70,7 +70,7 @@ class DataManager:
         self.path = path if path is not None else []
         self.pointer = pointer
 
-    def get_data(self) -> list[tuple[DataValue, DataValue]]:
+    def get_data(self) -> List[Tuple[DataValue, DataValue]]:
         """
         Returns current data packed as instances of tuples like this: (key, value)
         with both key and value packed as instances of DataValue.
@@ -92,7 +92,7 @@ class DataManager:
                 key=sort_dv_item
             )
             return cdata_items
-        if isinstance(cdata, List):
+        if isinstance(cdata, list):
             return [(DataValue(index), DataValue(value)) for index, value in enumerate(cdata)]
         return [(DataValue(DataConstants.LEAF_NODE), DataValue(cdata))]
 
